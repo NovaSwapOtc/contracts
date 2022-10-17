@@ -1,0 +1,13 @@
+["protostar.config"]
+protostar_version = "0.5.0"
+
+["protostar.project"]
+libs_path = "lib"
+
+["protostar.contracts"]
+otc_module = [
+    "src/otc_module/otc_module.cairo",
+]
+
+["protostar.shared_command_configs"]
+cairo-path = ["./lib/cairo_contracts/src"]

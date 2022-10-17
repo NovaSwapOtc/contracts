@@ -1,2 +1,1 @@
-# contracts
-Contracts managing the NovaSwap protocol.
+# Nova Contracts
