@@ -1,0 +1,1119 @@
+[
+    {
+        "members": [
+            {
+                "name": "low",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "high",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "Uint256",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "id",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "owner",
+                "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "status",
+                "offset": 2,
+                "type": "felt"
+            }
+        ],
+        "name": "Swap",
+        "size": 3,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "asset_contract",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "assets_ids_len",
+                "offset": 1,
+                "type": "felt"
+            },
+            {
+                "name": "assets_amounts_len",
+                "offset": 2,
+                "type": "felt"
+            }
+        ],
+        "name": "ERC1155DataStorage",
+        "size": 3,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "asset_contract",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "asset_id",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "ERC721DataInput",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "members": [
+            {
+                "name": "asset_contract",
+                "offset": 0,
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "offset": 1,
+                "type": "felt"
+            }
+        ],
+        "name": "ERC20DataInput",
+        "size": 2,
+        "type": "struct"
+    },
+    {
+        "data": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "id",
+                "type": "Uint256"
+            },
+            {
+                "name": "value",
+                "type": "Uint256"
+            }
+        ],
+        "keys": [],
+        "name": "TransferSingle",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "from_",
+                "type": "felt"
+            },
+            {
+                "name": "to",
+                "type": "felt"
+            },
+            {
+                "name": "ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "ids",
+                "type": "Uint256*"
+            },
+            {
+                "name": "values_len",
+                "type": "felt"
+            },
+            {
+                "name": "values",
+                "type": "Uint256*"
+            }
+        ],
+        "keys": [],
+        "name": "TransferBatch",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "account",
+                "type": "felt"
+            },
+            {
+                "name": "operator",
+                "type": "felt"
+            },
+            {
+                "name": "approved",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "ApprovalForAll",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "value_len",
+                "type": "felt"
+            },
+            {
+                "name": "value",
+                "type": "felt*"
+            },
+            {
+                "name": "id",
+                "type": "Uint256"
+            }
+        ],
+        "keys": [],
+        "name": "URI",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "implementation",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "Upgraded",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "previousAdmin",
+                "type": "felt"
+            },
+            {
+                "name": "newAdmin",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "AdminChanged",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "previousOwner",
+                "type": "felt"
+            },
+            {
+                "name": "newOwner",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "Paused",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "account",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "Unpaused",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "swap",
+                "type": "Swap"
+            },
+            {
+                "name": "executor",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "SwapOpened",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "swap",
+                "type": "Swap"
+            }
+        ],
+        "keys": [],
+        "name": "SwapCancelled",
+        "type": "event"
+    },
+    {
+        "data": [
+            {
+                "name": "swap",
+                "type": "Swap"
+            },
+            {
+                "name": "executor",
+                "type": "felt"
+            }
+        ],
+        "keys": [],
+        "name": "SwapExecuted",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "name": "proxy_admin",
+                "type": "felt"
+            }
+        ],
+        "name": "constructor",
+        "outputs": [],
+        "type": "constructor"
+    },
+    {
+        "inputs": [
+            {
+                "name": "erc1155_datas_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_datas",
+                "type": "ERC1155DataStorage*"
+            },
+            {
+                "name": "erc1155_array_ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_array_ids",
+                "type": "Uint256*"
+            },
+            {
+                "name": "erc1155_array_amounts_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_array_amounts",
+                "type": "Uint256*"
+            },
+            {
+                "name": "erc721_array_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc721_array",
+                "type": "ERC721DataInput*"
+            },
+            {
+                "name": "erc20_array_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc20_array",
+                "type": "ERC20DataInput*"
+            }
+        ],
+        "name": "open_swap",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_datas_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_datas",
+                "type": "ERC1155DataStorage*"
+            },
+            {
+                "name": "erc1155_array_ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_array_ids",
+                "type": "Uint256*"
+            },
+            {
+                "name": "erc1155_array_amounts_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc1155_array_amounts",
+                "type": "Uint256*"
+            },
+            {
+                "name": "erc721_array_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc721_array",
+                "type": "ERC721DataInput*"
+            },
+            {
+                "name": "erc20_array_len",
+                "type": "felt"
+            },
+            {
+                "name": "erc20_array",
+                "type": "ERC20DataInput*"
+            }
+        ],
+        "name": "bid_swap",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "cancel_swap",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "execute_swap",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_bids_of_swap",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_amount_bids_per_swap",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_bids_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_bids_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_ids_per_bid_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_amounts_per_bid_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc20_bids_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc20_bids_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc721_bids_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc721_bids_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "id",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_bidders_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_bids_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_active_swap",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_active_swaps_len",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_cancelled_swap",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_cancelled_swaps_len",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_executed_swap",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_executed_swaps_len",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_timestamp",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_swap",
+        "outputs": [
+            {
+                "name": "swap",
+                "type": "Swap"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_swap_owner",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_swap_id",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "get_swap_counter",
+        "outputs": [
+            {
+                "name": "value",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_swap_status",
+        "outputs": [
+            {
+                "name": "status",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_ids_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc1155_amounts_per_swap",
+        "outputs": [
+            {
+                "name": "res_len",
+                "type": "felt"
+            },
+            {
+                "name": "res",
+                "type": "Uint256*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc20_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc20_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc721_per_swap_amount",
+        "outputs": [
+            {
+                "name": "res",
+                "type": "felt"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            }
+        ],
+        "name": "get_erc721_per_swap",
+        "outputs": [
+            {
+                "name": "address",
+                "type": "felt"
+            },
+            {
+                "name": "id",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            },
+            {
+                "name": "idx",
+                "type": "felt"
+            },
+            {
+                "name": "idx_token_id",
+                "type": "felt"
+            }
+        ],
+        "name": "get_mapping_erc1155_amounts_per_swap",
+        "outputs": [
+            {
+                "name": "amount",
+                "type": "Uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pause",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "unpause",
+        "outputs": [],
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "_get_cancelled_swaps",
+        "outputs": [
+            {
+                "name": "swaps_ids_len",
+                "type": "felt"
+            },
+            {
+                "name": "swaps_ids",
+                "type": "felt*"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

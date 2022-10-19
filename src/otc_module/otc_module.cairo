@@ -236,6 +236,7 @@ func mapping_erc1155_amounts_per_swap(swap_id : felt, idx : felt, idx_token_id :
 }
 
 
+
 @storage_var
 func erc1155_assets_per_swap_amount(swap_id : felt) -> (amount: felt) {
 }
@@ -1363,7 +1364,6 @@ func _get_erc1155_ids_per_bid_per_swap{syscall_ptr: felt*, pedersen_ptr: HashBui
     return _get_erc1155_ids_per_bid_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, bid_id=bid_id, idx=idx);
 }
 
-// TODO : conversion weird
 func _get_erc1155_amounts_per_bid_per_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     start : felt, to_fill : Uint256*, array_len : felt, swap_id : felt, bid_id : felt, idx : felt
 ){
@@ -1373,7 +1373,7 @@ func _get_erc1155_amounts_per_bid_per_swap{syscall_ptr: felt*, pedersen_ptr: Has
     }
     let (local amount : Uint256) = mapping_erc1155_amounts_per_bid.read(swap_id=swap_id, bid_id=bid_id, idx=idx, idx_token_id=start);
     assert [to_fill] = amount;
-    return _get_erc1155_ids_per_bid_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, bid_id=bid_id, idx=idx);
+    return _get_erc1155_amounts_per_bid_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, bid_id=bid_id, idx=idx);
 }
 
 // SWAP VERSION
@@ -1390,7 +1390,6 @@ func _get_erc1155_ids_per_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, r
     return _get_erc1155_ids_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, idx=idx);
 }
 
-// TODO : conversion weird
 func _get_erc1155_amounts_per_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     start : felt, to_fill : Uint256*, array_len : felt, swap_id : felt, idx : felt
 ){
@@ -1400,7 +1399,7 @@ func _get_erc1155_amounts_per_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin
     }
     let (local amount : Uint256) = mapping_erc1155_amounts_per_swap.read(swap_id=swap_id, idx=idx, idx_token_id=start);
     assert [to_fill] = amount;
-    return _get_erc1155_ids_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, idx=idx);
+    return _get_erc1155_amounts_per_swap(start=start+1, to_fill=to_fill+Uint256.SIZE, array_len=array_len, swap_id=swap_id, idx=idx);
 }
 
 ////
