@@ -311,10 +311,11 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
         //assert_nn_le(block_timestamp, _expiration);
     //}
 
- 
+   
+    
     
     // make sure caller owns the erc1155 assets
-    assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts);
+    assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts, caller);
 
     // TODO : make sure caller owns the erc721, erc20 assets
 
@@ -403,7 +404,7 @@ func bid_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 
     
     // make sure caller owns the erc1155 assets
-    assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts);
+    assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
     //
    
     let (bids_count) = bids_counter_per_swap.read(swap_id);
@@ -475,8 +476,9 @@ func cancel_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 //TODO
 @external
 func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    
+    swap_id : felt
 ) {
+
     return (); 
 }
 
@@ -879,37 +881,39 @@ func assert_sizes_correct{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
 }
 
 func assert_erc1155_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    start : felt, erc1155_datas_len : felt, erc1155_datas : ERC1155DataStorage*, erc1155_array_len_ids : felt, erc1155_array_ids : Uint256*, erc1155_array_amounts : Uint256*
+    start : felt, erc1155_datas_len : felt, erc1155_datas : ERC1155DataStorage*, erc1155_array_len_ids : felt, erc1155_array_ids : Uint256*, erc1155_array_amounts : Uint256*, caller : felt
 ){
+    alloc_locals;
     if (start==erc1155_datas_len) {
         return ();
     }
     let data_storage : ERC1155DataStorage = [erc1155_datas];
 
-    let address_erc1155 = data_storage.asset_contract;
-    let token_amounts_len = data_storage.assets_amounts_len;
-    let token_ids_len = data_storage.assets_ids_len;
-    _assert_erc1155_owned(0, address_erc1155,token_amounts_len, erc1155_array_ids, erc1155_array_amounts);
+    local address_erc1155 = data_storage.asset_contract;
+    local token_amounts_len = data_storage.assets_amounts_len;
+    local token_ids_len = data_storage.assets_ids_len;
+    _assert_erc1155_owned(0, address_erc1155, token_amounts_len, erc1155_array_ids, erc1155_array_amounts, caller);
 
-    return assert_erc1155_owned(start=start+1, erc1155_datas_len=erc1155_datas_len, erc1155_datas=erc1155_datas + ERC1155DataStorage.SIZE, erc1155_array_len_ids=erc1155_array_len_ids, erc1155_array_ids=erc1155_array_ids+ token_amounts_len * Uint256.SIZE, erc1155_array_amounts=erc1155_array_amounts+ token_amounts_len * Uint256.SIZE);
+    return assert_erc1155_owned(start=start+1, erc1155_datas_len=erc1155_datas_len, erc1155_datas=erc1155_datas + ERC1155DataStorage.SIZE, erc1155_array_len_ids=erc1155_array_len_ids, erc1155_array_ids=erc1155_array_ids+ token_amounts_len * Uint256.SIZE, erc1155_array_amounts=erc1155_array_amounts+ token_amounts_len * Uint256.SIZE, caller=caller);
 }
 
 func _assert_erc1155_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    start : felt, address_erc1155 : felt , token_amounts_len : felt, erc1155_array_ids : Uint256*, erc1155_array_amounts : Uint256*
+    start : felt, address_erc1155 : felt , token_amounts_len : felt, erc1155_array_ids : Uint256*, erc1155_array_amounts : Uint256*, caller : felt
 ){
     if (start==token_amounts_len) {
         return ();
     }
-    let (caller) = get_caller_address();
+    //let (caller) = get_caller_address();
     // check if user owns token_amount of token_id of ERC1155 contract address
     let id : Uint256 = [erc1155_array_ids];
     let amount : Uint256 = [erc1155_array_amounts];
 
     let (balance : Uint256) = IERC1155.balanceOf(contract_address=address_erc1155, owner=caller, token_id=id);
     with_attr error_message("ERC1155_EXCHANGE : Error Inside Asserting Min Amounts Are Available") {
-        uint256_le(amount, balance);
+        let (res) = uint256_le(amount, balance);
+        assert res = 1;
     }
-    return _assert_erc1155_owned(start=start+1, address_erc1155=address_erc1155 , token_amounts_len=token_amounts_len, erc1155_array_ids=erc1155_array_ids+Uint256.SIZE, erc1155_array_amounts=erc1155_array_amounts+Uint256.SIZE);
+    return _assert_erc1155_owned(start=start+1, address_erc1155=address_erc1155 , token_amounts_len=token_amounts_len, erc1155_array_ids=erc1155_array_ids+Uint256.SIZE, erc1155_array_amounts=erc1155_array_amounts+Uint256.SIZE, caller=caller);
 }
 
 

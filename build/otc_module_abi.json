@@ -419,7 +419,12 @@
         "type": "function"
     },
     {
-        "inputs": [],
+        "inputs": [
+            {
+                "name": "swap_id",
+                "type": "felt"
+            }
+        ],
         "name": "execute_swap",
         "outputs": [],
         "type": "function"
@@ -1057,31 +1062,6 @@
             },
             {
                 "name": "id",
-                "type": "Uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "name": "swap_id",
-                "type": "felt"
-            },
-            {
-                "name": "idx",
-                "type": "felt"
-            },
-            {
-                "name": "idx_token_id",
-                "type": "felt"
-            }
-        ],
-        "name": "get_mapping_erc1155_amounts_per_swap",
-        "outputs": [
-            {
-                "name": "amount",
                 "type": "Uint256"
             }
         ],
