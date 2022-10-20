@@ -311,8 +311,6 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
         //assert_nn_le(block_timestamp, _expiration);
     //}
 
-   
-    
     
     // make sure caller owns the erc1155 assets
     assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts, caller);
@@ -400,12 +398,13 @@ func bid_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     }
 
     assert_sizes_correct(erc1155_datas_len,erc1155_datas,erc1155_array_ids_len);
-
-
     
     // make sure caller owns the erc1155 assets
     assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
     //
+    // TODO : make sure caller owns the erc20 + erc721 assets
+    //
+    
    
     let (bids_count) = bids_counter_per_swap.read(swap_id);
 
@@ -473,7 +472,6 @@ func cancel_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     return (); 
 }
 
-//TODO
 @external
 func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     swap_id : felt, bid_id : felt
@@ -505,6 +503,12 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
         assert swap.status = Erc1155SwapStatus.Opened;
     }
 
+    // TODO : make sure caller owns the erc1155 assets
+    //assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
+    //
+
+    // TODO : make sure caller owns the erc20 + erc721 assets
+    //
     
     // execute the ERC1155 swap from BIDDER TO SWAP OWNER
     let (amount_of_erc1155) = get_erc1155_bids_per_swap_amount(swap_id, bid_id);
