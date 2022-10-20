@@ -476,10 +476,174 @@ func cancel_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
 //TODO
 @external
 func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    swap_id : felt
+    swap_id : felt, bid_id : felt
 ) {
+    alloc_locals;
 
+    // assert swapId and bidiD are ok
+    with_attr error_message("OTC_MODULE : execute_swap : SwapId invalid"){
+        let (max_swaps) = get_swap_counter();
+        assert_nn_le(swap_id, max_swaps-1);
+    }
+
+    with_attr error_message("OTC_MODULE : execute_swap : BidId invalid"){
+        let (max_bids) = get_amount_bids_per_swap(swap_id);
+        assert_nn_le(bid_id, max_bids-1);
+    }
+
+    // get bid info 
+    let (bid : Bid) = bids_per_swap.read(swap_id, bid_id);
+    let recipient = bid.owner;
+    with_attr error_message("OTC_MODULE : execute_swap : Bid Already Accepted"){
+        assert bid.successful = FALSE;
+    }
+
+    // get swap info
+    let (swap : Swap) = get_swap(swap_id);
+    let owner_of_swap = swap.owner;
+    with_attr error_message("OTC_MODULE : execute_swap : Swap Already Executed Or Cancelled"){
+        assert swap.status = Erc1155SwapStatus.Opened;
+    }
+
+    
+    // execute the ERC1155 swap from BIDDER TO SWAP OWNER
+    let (amount_of_erc1155) = get_erc1155_bids_per_swap_amount(swap_id, bid_id);
+    _execute_erc1155(0, amount_of_erc1155, recipient, owner_of_swap, swap_id, bid_id);
+
+    // execute the ERC1155 swap from SWAP OWNER TO BIDDER
+    let (amount_of_erc1155_swap) = get_erc1155_per_swap_amount(swap_id);
+    _execute_erc1155_v2(0, amount_of_erc1155_swap, owner_of_swap, recipient, swap_id);
+
+    // execute the ERC20 swap from BIDDER TO SWAP OWNER
+    let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
+    _execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
+
+    // execute the ERC20 swap from SWAP OWNER TO BIDDER
+    let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
+    _execute_erc20_v2(0, amount_of_erc20_swap, owner_of_swap, recipient, swap_id);
+
+    // execute the ERC721 swap from BIDDER TO SWAP OWNER
+    let (amount_of_erc721) = get_erc721_bids_per_swap_amount(swap_id, bid_id);
+    _execute_erc721(0, amount_of_erc721, recipient, owner_of_swap, swap_id, bid_id);
+
+    // execute the ERC721 swap from SWAP OWNER TO BIDDER
+    let (amount_of_erc721_swap) = get_erc721_per_swap_amount(swap_id);
+    _execute_erc721_v2(0, amount_of_erc721_swap, owner_of_swap, recipient, swap_id);
+
+    local new_swap : Swap = Swap(
+        swap.id, 
+        swap.owner,
+        Erc1155SwapStatus.Executed,
+    ); 
+
+    _swaps_v2.write(swap_id, new_swap);
+
+    local new_bid : Bid = Bid(
+        bid.bid_id, 
+        bid.owner,
+        TRUE,
+    ); 
+    bids_per_swap.write(swap_id, bid_id, new_bid);
     return (); 
+}
+
+func _execute_erc1155{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt, bid_id : felt
+){
+    alloc_locals;
+    if (start==end) {
+        return ();
+    }
+    let (local address, local amount) = get_erc1155_bids_per_swap(swap_id, bid_id, start);
+
+    let (local res_ids : felt, local ids : Uint256*) = get_erc1155_ids_per_bid_per_swap(swap_id, bid_id, start);
+    let (local res_amounts : felt, local amounts : Uint256*) = get_erc1155_amounts_per_bid_per_swap(swap_id, bid_id, start);
+    let (local array : felt*) = alloc();
+    IERC1155.safeBatchTransferFrom(address, _from, _to, res_ids, ids, res_amounts, amounts, 0, array);
+
+    return _execute_erc1155(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id, bid_id=bid_id);
+}
+
+func _execute_erc1155_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt
+){
+    alloc_locals;
+
+    if (start==end) {
+        return ();
+    }
+    let (local address, local amount) = get_erc1155_per_swap(swap_id, start);
+
+    let (local res_ids : felt, local ids : Uint256*) = get_erc1155_ids_per_swap(swap_id, start);
+    let (local res_amounts : felt, local amounts : Uint256*) = get_erc1155_amounts_per_swap(swap_id, start);
+    let (local array : felt*) = alloc();
+    IERC1155.safeBatchTransferFrom(address, _from, _to, res_ids, ids, res_amounts, amounts, 0, array);
+
+    return _execute_erc1155_v2(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id);
+}
+
+func _execute_erc20{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt, bid_id : felt
+){
+    alloc_locals;
+
+    if (start==end) {
+        return ();
+    } 
+    let (local address : felt, local amount : Uint256) = get_erc20_bids_per_swap(swap_id, bid_id, start);
+
+    let (res) = IERC20.transferFrom(address, _from, _to, amount);
+    with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from Bidder to SwapOwner Failed"){
+        assert res = 1;
+    }    
+    return _execute_erc20(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id, bid_id=bid_id);
+}
+
+func _execute_erc20_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt
+){
+    alloc_locals;
+
+    if (start==end) {
+        return ();
+    }
+    let (local address : felt, local amount : Uint256) = get_erc20_per_swap(swap_id, start);
+
+    let (res) = IERC20.transferFrom(address, _from, _to, amount);
+    with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from SwapOwner to Bidder Failed"){
+        assert res = 1;
+    }
+    return _execute_erc20_v2(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id);
+}
+
+func _execute_erc721{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt, bid_id : felt
+){
+    alloc_locals;
+
+    if (start==end) {
+        return ();
+    }
+    let (local address : felt, local id : Uint256) = get_erc721_bids_per_swap(swap_id, bid_id, start);
+    let (local array : felt*) = alloc();
+    IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
+
+    return _execute_erc721(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id, bid_id=bid_id);
+}
+
+func _execute_erc721_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, _from : felt, _to : felt, swap_id : felt
+){
+    alloc_locals;
+
+    if (start==end) {
+        return ();
+    }
+    let (local address : felt, local id : Uint256) = get_erc721_per_swap(swap_id, start);
+    let (local array : felt*) = alloc();
+    IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
+
+    return _execute_erc721_v2(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id);
 }
 
 // VIEWS

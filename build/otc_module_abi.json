@@ -423,6 +423,10 @@
             {
                 "name": "swap_id",
                 "type": "felt"
+            },
+            {
+                "name": "bid_id",
+                "type": "felt"
             }
         ],
         "name": "execute_swap",
