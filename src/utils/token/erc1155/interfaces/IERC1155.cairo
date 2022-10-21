@@ -27,6 +27,18 @@ namespace IERC1155 {
     ) {
     }
 
+    func batchTransferFrom(
+        from_: felt,
+        to: felt,
+        ids_len: felt,
+        ids: Uint256*,
+        amounts_len: felt,
+        amounts: Uint256*,
+        data_len: felt,
+        data: felt*,
+    ) {
+    }
+
     func safeBatchTransferFrom(
         _from: felt,
         to: felt,
