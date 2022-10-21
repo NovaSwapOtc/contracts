@@ -50,7 +50,7 @@ from src.utils.constants import (
 // STRUCTS
 //
 
-namespace Erc1155SwapStatus {
+namespace SwapStatus {
     const Opened = 1;
     const Executed = 2;
     const Cancelled = 3;
@@ -62,7 +62,7 @@ struct Erc1155Swap {
     asset_contract: felt,
     asset_ids_len : felt,
     asset_amounts_len : felt,
-    status: felt,  // from Erc1155SwapStatus
+    status: felt,  // from SwapStatus
     //expiration : felt,
 }
 
@@ -292,19 +292,19 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 
     let (caller) = get_caller_address();
 
-    with_attr error_message("ERC1155_EXCHANGE: caller MUST BE different than 0") {
+    with_attr error_message("OTC_MODULE: caller MUST BE different than 0") {
         assert_not_zero(caller);
     }
-    with_attr error_message("ERC1155_EXCHANGE: erc1155_array_ids_len MUST BE equals to erc1155_array_amounts_len") {
+    with_attr error_message("OTC_MODULE: erc1155_array_ids_len MUST BE equals to erc1155_array_amounts_len") {
         assert erc1155_array_ids_len = erc1155_array_amounts_len;
     }
     assert_sizes_correct(erc1155_datas_len,erc1155_datas,erc1155_array_ids_len);
 
-    //with_attr error_message("ERC1155_EXCHANGE: _expiration MUST BE different than 0") {
+    //with_attr error_message("OTC_MODULE: _expiration MUST BE different than 0") {
       //  assert_not_zero(_expiration);
     //}
     // check if expiration is valid
-    //with_attr error_message("ERC1155_EXCHANGE: _expiration MUST BE greater than 1 day") {
+    //with_attr error_message("OTC_MODULE: _expiration MUST BE greater than 1 day") {
         //let (block_timestamp) = get_block_timestamp();
         // actual time + 1 day in seconds
         //let sum_future = block_timestamp + 86400;
@@ -315,12 +315,12 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     // make sure caller owns the erc1155 assets
     assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts, caller);
 
-    // TODO : make sure caller owns the erc721, erc20 assets
-
+    // TODO : make sure caller owns the erc721
+    assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
 
     let (swaps_count) = _swaps_counter.read();
 
-    local swap : Swap = Swap(swaps_count, caller, Erc1155SwapStatus.Opened);
+    local swap : Swap = Swap(swaps_count, caller, SwapStatus.Opened);
     _swaps_v2.write(swaps_count, swap);
 
     // Store the amount of ERC1155 being "offered" for swap_id
@@ -384,16 +384,16 @@ func bid_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     let (caller) = get_caller_address();
     let (swap_count) = _swaps_counter.read();
 
-    with_attr error_message("ERC1155_EXCHANGE: caller MUST BE different than 0") {
+    with_attr error_message("OTC_MODULE: caller MUST BE different than 0") {
         assert_not_zero(caller);
     }
 
     let (swap : Swap) = _swaps_v2.read(swap_id);
-    with_attr error_message("ERC1155_EXCHANGE: owner CAN NOT bid on its own swap") {
+    with_attr error_message("OTC_MODULE: owner CAN NOT bid on its own swap") {
       assert_not_equal(caller, swap.owner);
     }
 
-    with_attr error_message("ERC1155_EXCHANGE: swap id UNVALID") {
+    with_attr error_message("OTC_MODULE: swap id UNVALID") {
         assert_nn_le(swap_id, swap_count);
     }
 
@@ -401,10 +401,11 @@ func bid_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     
     // make sure caller owns the erc1155 assets
     assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
-    //
-    // TODO : make sure caller owns the erc20 + erc721 assets
-    //
     
+    // TODO : make sure caller owns erc721 assets
+
+    assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
+
    
     let (bids_count) = bids_counter_per_swap.read(swap_id);
 
@@ -454,18 +455,18 @@ func cancel_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr
     let (swap : Swap) = _swaps_v2.read(swap_id);
     let (caller) = get_caller_address();
 
-    with_attr error_message("ERC1155_EXCHANGE: Swap MUST BE OPENED") {
-        assert swap.status = Erc1155SwapStatus.Opened;
+    with_attr error_message("OTC_MODULE: Swap MUST BE OPENED") {
+        assert swap.status = SwapStatus.Opened;
     }
 
-    with_attr error_message("ERC1155_EXCHANGE: Swap MUST BE cancelled by Owner") {
+    with_attr error_message("OTC_MODULE: Swap MUST BE cancelled by Owner") {
         assert caller = swap.owner;
     }
     // TODO : if expiration exists do a check if it has expired 
     local cancelled_swap : Swap = Swap(
         swap.id,
         swap.owner,
-        Erc1155SwapStatus.Cancelled,
+        SwapStatus.Cancelled,
     );
     _swaps_v2.write(swap_id, cancelled_swap);
     SwapCancelled.emit(cancelled_swap);
@@ -500,7 +501,7 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     let (swap : Swap) = get_swap(swap_id);
     let owner_of_swap = swap.owner;
     with_attr error_message("OTC_MODULE : execute_swap : Swap Already Executed Or Cancelled"){
-        assert swap.status = Erc1155SwapStatus.Opened;
+        assert swap.status = SwapStatus.Opened;
     }
 
     // TODO : make sure caller owns the erc20 + erc721 assets
@@ -514,26 +515,26 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     let (amount_of_erc1155_swap) = get_erc1155_per_swap_amount(swap_id);
     _execute_erc1155_v2(0, amount_of_erc1155_swap, owner_of_swap, recipient, swap_id);
 
-    // execute the ERC20 swap from BIDDER TO SWAP OWNER
-    //let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
-    //_execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
+    //execute the ERC20 swap from BIDDER TO SWAP OWNER
+    let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
+    _execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
 
     // execute the ERC20 swap from SWAP OWNER TO BIDDER
-    //let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
-    //_execute_erc20_v2(0, amount_of_erc20_swap, owner_of_swap, recipient, swap_id);
+    let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
+    _execute_erc20_v2(0, amount_of_erc20_swap, owner_of_swap, recipient, swap_id);
 
     // execute the ERC721 swap from BIDDER TO SWAP OWNER
-    //let (amount_of_erc721) = get_erc721_bids_per_swap_amount(swap_id, bid_id);
-    //_execute_erc721(0, amount_of_erc721, recipient, owner_of_swap, swap_id, bid_id);
+    let (amount_of_erc721) = get_erc721_bids_per_swap_amount(swap_id, bid_id);
+    _execute_erc721(0, amount_of_erc721, recipient, owner_of_swap, swap_id, bid_id);
 
     // execute the ERC721 swap from SWAP OWNER TO BIDDER
-    //let (amount_of_erc721_swap) = get_erc721_per_swap_amount(swap_id);
-    //_execute_erc721_v2(0, amount_of_erc721_swap, owner_of_swap, recipient, swap_id);
+    let (amount_of_erc721_swap) = get_erc721_per_swap_amount(swap_id);
+    _execute_erc721_v2(0, amount_of_erc721_swap, owner_of_swap, recipient, swap_id);
 
     local new_swap : Swap = Swap(
         swap.id, 
         swap.owner,
-        Erc1155SwapStatus.Executed,
+        SwapStatus.Executed,
     ); 
 
     _swaps_v2.write(swap_id, new_swap);
@@ -597,7 +598,12 @@ func _execute_erc20{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
         return ();
     } 
     let (local address : felt, local amount : Uint256) = get_erc20_bids_per_swap(swap_id, bid_id, start);
-
+    
+    let (balance : Uint256) = IERC20.balanceOf(contract_address=address, account=_from);
+    with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
+        let (res) = uint256_le(amount, balance);
+        assert res = 1;
+    }
     let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from Bidder to SwapOwner Failed"){
         assert res = 1;
@@ -614,6 +620,12 @@ func _execute_erc20_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
         return ();
     }
     let (local address : felt, local amount : Uint256) = get_erc20_per_swap(swap_id, start);
+
+    let (balance : Uint256) = IERC20.balanceOf(contract_address=address, account=_from);
+    with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
+        let (res) = uint256_le(amount, balance);
+        assert res = 1;
+    }
 
     let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from SwapOwner to Bidder Failed"){
@@ -632,6 +644,7 @@ func _execute_erc721{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     }
     let (local address : felt, local id : Uint256) = get_erc721_bids_per_swap(swap_id, bid_id, start);
     let (local array : felt*) = alloc();
+    // todo : assert
     IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
 
     return _execute_erc721(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id, bid_id=bid_id);
@@ -647,6 +660,7 @@ func _execute_erc721_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     }
     let (local address : felt, local id : Uint256) = get_erc721_per_swap(swap_id, start);
     let (local array : felt*) = alloc();
+    // todo : assert
     IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
 
     return _execute_erc721_v2(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id);
@@ -662,7 +676,7 @@ func assert_execute_erc1155{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
     let amount : Uint256 = [erc1155_array_amounts];
 
     let (balance : Uint256) = IERC1155.balanceOf(contract_address=address_erc1155, owner=caller, token_id=id);
-    with_attr error_message("ERC1155_EXCHANGE : Error Inside Asserting Min Amounts Are Available") {
+    with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
         let (res) = uint256_le(amount, balance);
         assert res = 1;
     }
@@ -1035,7 +1049,7 @@ func _assert_data_sizes{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
  
     let token_amounts_len = data_storage.assets_amounts_len;
     let token_ids_len = data_storage.assets_ids_len;
-    with_attr error_message("ERC1155_EXCHANGE: token_amounts_len MUST BE equals to token_ids_len") {
+    with_attr error_message("OTC_MODULE: token_amounts_len MUST BE equals to token_ids_len") {
         assert token_amounts_len = token_ids_len;
     }
     return _assert_data_sizes(start=start+1, erc1155_datas_len=erc1155_datas_len, erc1155_datas=erc1155_datas+ERC1155DataStorage.SIZE);
@@ -1061,10 +1075,32 @@ func assert_sizes_correct{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
     _assert_data_sizes(start=0,erc1155_datas_len=erc1155_datas_len, erc1155_datas=erc1155_datas);
 
     let (added_size) = _get_added_size(0, erc1155_datas_len, erc1155_datas, 0);
-    with_attr error_message("ERC1155_EXCHANGE: erc1155_array MUST BE equals to storage data sizes summed") {
+    with_attr error_message("OTC_MODULE: erc1155_array MUST BE equals to storage data sizes summed") {
         assert added_size = 2 * erc1155_array_ids_len;
     }
     return ();
+}
+
+func assert_erc20_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    start : felt, end : felt, erc20_array : ERC20DataInput*, caller : felt
+){
+    alloc_locals;
+    if (start==end) {
+        return ();
+    }
+    let data : ERC20DataInput = [erc20_array];
+
+    local address = data.asset_contract;
+    local amount = data.amount;
+
+    let (balance : Uint256) = IERC20.balanceOf(contract_address=address, account=caller);
+    with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
+        let (local uint_am) = _felt_to_uint(amount);
+        let (res) = uint256_le(uint_am, balance);
+        assert res = 1;
+    }
+
+    return assert_erc20_owned(start=start+1, end=end, erc20_array=erc20_array + ERC20DataInput.SIZE, caller=caller);
 }
 
 func assert_erc1155_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
@@ -1096,7 +1132,7 @@ func _assert_erc1155_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range
     let amount : Uint256 = [erc1155_array_amounts];
 
     let (balance : Uint256) = IERC1155.balanceOf(contract_address=address_erc1155, owner=caller, token_id=id);
-    with_attr error_message("ERC1155_EXCHANGE : Error Inside Asserting Min Amounts Are Available") {
+    with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
         let (res) = uint256_le(amount, balance);
         assert res = 1;
     }
@@ -1454,7 +1490,7 @@ func _fill_executed_swaps{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_
     let (swap : Swap) = _swaps_v2.read(start);
     let status = swap.status;
     let id = swap.id;
-    if (status == Erc1155SwapStatus.Executed) {
+    if (status == SwapStatus.Executed) {
         assert [start_tab] = id;
         local new_len = strt + 1;
         return _fill_executed_swaps{
@@ -1477,7 +1513,7 @@ func _fill_cancelled_swaps{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range
     let (swap : Swap) = _swaps_v2.read(start);
     let status = swap.status;
     let id = swap.id;
-    if (status == Erc1155SwapStatus.Cancelled) {
+    if (status == SwapStatus.Cancelled) {
         assert [start_tab] = id;
         local new_len = strt + 1; 
         return _fill_cancelled_swaps{
@@ -1500,7 +1536,7 @@ func _fill_active_swaps{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     let (swap : Swap) = _swaps_v2.read(start);
     let status = swap.status;
     let id = swap.id;
-    if (status == Erc1155SwapStatus.Opened) {
+    if (status == SwapStatus.Opened) {
         assert [start_tab] = id;
         local new_len = strt + 1;
         return _fill_active_swaps{
