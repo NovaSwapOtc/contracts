@@ -9,5 +9,13 @@ otc_module = [
     "src/otc_module/otc_module.cairo",
 ]
 
+erc20_mock = [
+    "src/common_mock/erc20_contract.cairo"
+]
+
+erc721_mock = [
+    "src/common_mock/erc721_contract.cairo"
+]
+
 ["protostar.shared_command_configs"]
 cairo-path = ["./lib/cairo_contracts/src"]

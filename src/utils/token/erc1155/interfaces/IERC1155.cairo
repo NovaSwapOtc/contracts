@@ -54,7 +54,7 @@ namespace IERC1155 {
     func mint(to: felt, id: Uint256, amount: Uint256, data_len: felt, data: felt*) -> () {
     }
 
-    func mintBatch(
+    func batchMint(
         to: felt,
         ids_len: felt,
         ids: Uint256*,

@@ -479,6 +479,14 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
 ) {
     alloc_locals; 
 
+    let (swap : Swap) = get_swap(swap_id);
+
+    //
+    with_attr error_message("OTC_MODULE : execute_swap : NotOwner"){
+        let (caller) = get_caller_address();
+        assert swap.owner = caller;
+    }
+
     // assert swapId and bidiD are ok
     with_attr error_message("OTC_MODULE : execute_swap : SwapId invalid"){
         let (max_swaps) = get_swap_counter();
@@ -498,7 +506,6 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     }
 
     // get swap info
-    let (swap : Swap) = get_swap(swap_id);
     let owner_of_swap = swap.owner;
     with_attr error_message("OTC_MODULE : execute_swap : Swap Already Executed Or Cancelled"){
         assert swap.status = SwapStatus.Opened;
@@ -515,13 +522,16 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     let (amount_of_erc1155_swap) = get_erc1155_per_swap_amount(swap_id);
     _execute_erc1155_v2(0, amount_of_erc1155_swap, owner_of_swap, recipient, swap_id);
 
+    // TODO : check why this line fails
+
+
     //execute the ERC20 swap from BIDDER TO SWAP OWNER
     let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
     _execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
 
     // execute the ERC20 swap from SWAP OWNER TO BIDDER
-    let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
-    _execute_erc20_v2(0, amount_of_erc20_swap, owner_of_swap, recipient, swap_id);
+    //let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
+    //_execute_erc20_v2(0, amount_of_erc20_swap, owner_of_swap, recipient, swap_id);
 
     // execute the ERC721 swap from BIDDER TO SWAP OWNER
     let (amount_of_erc721) = get_erc721_bids_per_swap_amount(swap_id, bid_id);
@@ -530,6 +540,7 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     // execute the ERC721 swap from SWAP OWNER TO BIDDER
     let (amount_of_erc721_swap) = get_erc721_per_swap_amount(swap_id);
     _execute_erc721_v2(0, amount_of_erc721_swap, owner_of_swap, recipient, swap_id);
+
 
     local new_swap : Swap = Swap(
         swap.id, 
@@ -604,7 +615,8 @@ func _execute_erc20{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
         let (res) = uint256_le(amount, balance);
         assert res = 1;
     }
-    let (res) = IERC20.transferFrom(address, _from, _to, amount);
+    
+    //let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from Bidder to SwapOwner Failed"){
         assert res = 1;
     }    
@@ -627,7 +639,7 @@ func _execute_erc20_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
         assert res = 1;
     }
 
-    let (res) = IERC20.transferFrom(address, _from, _to, amount);
+    //let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from SwapOwner to Bidder Failed"){
         assert res = 1;
     }
@@ -638,14 +650,14 @@ func _execute_erc721{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check
     start : felt, end : felt, _from : felt, _to : felt, swap_id : felt, bid_id : felt
 ){
     alloc_locals;
-
+ 
     if (start==end) {
         return ();
     }
     let (local address : felt, local id : Uint256) = get_erc721_bids_per_swap(swap_id, bid_id, start);
     let (local array : felt*) = alloc();
     // todo : assert
-    IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
+    IERC721.transferFrom(address, _from, _to, id);
 
     return _execute_erc721(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id, bid_id=bid_id);
 }
@@ -661,7 +673,7 @@ func _execute_erc721_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
     let (local address : felt, local id : Uint256) = get_erc721_per_swap(swap_id, start);
     let (local array : felt*) = alloc();
     // todo : assert
-    IERC721.safeTransferFrom(address, _from, _to, id, 0, array);
+    IERC721.transferFrom(address, _from, _to, id);
 
     return _execute_erc721_v2(start=start+1, end=end, _from=_from, _to=_to, swap_id=swap_id);
 }
