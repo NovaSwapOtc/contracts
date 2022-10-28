@@ -126,6 +126,7 @@ func SwapCancelled(swap : Swap) {
 func SwapExecuted(swap : Swap, executor : felt) {
 }
 
+// TODO : add Events
 //
 // Storage
 // 
@@ -298,7 +299,7 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     with_attr error_message("OTC_MODULE: erc1155_array_ids_len MUST BE equals to erc1155_array_amounts_len") {
         assert erc1155_array_ids_len = erc1155_array_amounts_len;
     }
-    assert_sizes_correct(erc1155_datas_len,erc1155_datas,erc1155_array_ids_len);
+    assert_sizes_correct(erc1155_datas_len, erc1155_datas, erc1155_array_ids_len);
 
     //with_attr error_message("OTC_MODULE: _expiration MUST BE different than 0") {
       //  assert_not_zero(_expiration);
@@ -310,42 +311,76 @@ func open_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
         //let sum_future = block_timestamp + 86400;
         //assert_nn_le(block_timestamp, _expiration);
     //}
-
-    
-    // make sure caller owns the erc1155 assets
-    assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts, caller);
-
-    // TODO : make sure caller owns the erc721
-    assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
-
     let (swaps_count) = _swaps_counter.read();
 
+    // IF THE FIRST DATA SLOT CONTAINS A ERC1155 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_storage : ERC1155DataStorage = [erc1155_datas];
+    local address_erc1155 = data_storage.asset_contract;
+
+    if (address_erc1155 != 0) {
+        // make sure caller owns the erc1155 assets
+        assert_erc1155_owned(0, erc1155_datas_len, erc1155_datas, erc1155_array_ids_len, erc1155_array_ids, erc1155_array_amounts, caller);
+        // Store the amount of ERC1155 being "offered" for swap_id
+        erc1155_assets_per_swap_amount.write(swaps_count, erc1155_datas_len);
+
+        // Save ERC1155 data for this (swap_id)
+        _write_storage_swap_erc1155_data(0, swaps_count, erc1155_datas_len, erc1155_datas);
+
+        // Save ERC1155 ids for each single ERC1155Data for this (swap_id)
+        _write_storage_swap_erc1155_ids(0, swaps_count, erc1155_datas_len, erc1155_array_ids); 
+
+        // Save ERC1155 amounts for each single ERC1155Data for this (swap_id)
+        _write_storage_swap_erc1155_amounts(0, swaps_count, erc1155_datas_len, erc1155_array_amounts);
+
+    }else{
+    
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    
+    }
+
+    // IF THE FIRST DATA SLOT CONTAINS A ERC1155 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_erc20 : ERC20DataInput = [erc20_array];
+    local address_erc20 = data_erc20.asset_contract;
+    if (address_erc20 != 0) {
+        assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
+        // Store the amount of ERC20 being "offered" for swap_id
+        erc20_assets_per_swap_amount.write(swaps_count, erc20_array_len);
+        // Save ERC20 data for this (swap_id)
+        _write_storage_swap_erc20_data(0, swaps_count, erc20_array_len, erc20_array);
+    }else{
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
+    // TODO : make sure caller owns the erc721
+    
+    // IF THE FIRST DATA SLOT CONTAINS A ERC721 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_erc721 : ERC721DataInput = [erc721_array];
+    local address_erc721 = data_erc721.asset_contract;
+    if (address_erc721 != 0) {
+        // Store the amount of ERC721 being "offered" for swap_id
+        erc721_assets_per_swap_amount.write(swaps_count, erc721_array_len);
+        // Save ERC721 data for this (swap_id)
+        _write_storage_swap_erc721_data(0, swaps_count, erc721_array_len, erc721_array);
+    }else{
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
+
+    // TODO : maybe dangerous IF NOTHING IS PRESENT IN ARRAY DONT RECORD THE SWAP
+    let sum = address_erc20 + address_erc1155 + address_erc721;
+    if (sum == 0){
+        return ();
+    }else {
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
     local swap : Swap = Swap(swaps_count, caller, SwapStatus.Opened);
     _swaps_v2.write(swaps_count, swap);
-
-    // Store the amount of ERC1155 being "offered" for swap_id
-    erc1155_assets_per_swap_amount.write(swaps_count, erc1155_datas_len);
-
-    // Save ERC1155 data for this (swap_id)
-    _write_storage_swap_erc1155_data(0, swaps_count, erc1155_datas_len, erc1155_datas);
-
-    // Save ERC1155 ids for each single ERC1155Data for this (swap_id)
-    _write_storage_swap_erc1155_ids(0, swaps_count, erc1155_datas_len, erc1155_array_ids); 
-
-    // Save ERC1155 amounts for each single ERC1155Data for this (swap_id)
-    _write_storage_swap_erc1155_amounts(0, swaps_count, erc1155_datas_len, erc1155_array_amounts);
-
-    // Store the amount of ERC721 being "offered" for swap_id
-    erc721_assets_per_swap_amount.write(swaps_count, erc721_array_len);
-    // Save ERC721 data for this (swap_id)
-    _write_storage_swap_erc721_data(0, swaps_count, erc721_array_len, erc721_array);
-
-    // Store the amount of ERC20 being "offered" for swap_id
-    erc20_assets_per_swap_amount.write(swaps_count, erc20_array_len);
-    // Save ERC20 data for this (swap_id)
-    _write_storage_swap_erc20_data(0, swaps_count, erc20_array_len, erc20_array);
-
-
     
     // increment
     _swaps_counter.write(swaps_count + 1);
@@ -398,46 +433,89 @@ func bid_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     }
 
     assert_sizes_correct(erc1155_datas_len,erc1155_datas,erc1155_array_ids_len);
-    
-    // make sure caller owns the erc1155 assets
-    assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
-    
-    // TODO : make sure caller owns erc721 assets
 
-    assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
-
-   
     let (bids_count) = bids_counter_per_swap.read(swap_id);
 
 
+    // IF THE FIRST DATA SLOT CONTAINS A ERC1155 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_storage : ERC1155DataStorage = [erc1155_datas];
+    local address_erc1155 = data_storage.asset_contract;
+
+    if (address_erc1155 != 0) {
+        
+        // make sure caller owns the erc1155 assets
+        assert_erc1155_owned(0, erc1155_datas_len,erc1155_datas,erc1155_array_ids_len,erc1155_array_ids,erc1155_array_amounts, caller);
+        
+        // Store the amount of ERC1155 being "offered" inside this bid for swap_id
+        erc1155_assets_per_bid_amount.write(swap_id, bids_count, erc1155_datas_len);
+
+        // Save ERC1155 data for this (swap_id, bid_id)
+        _write_storage_bid_erc1155_data(0, swap_id, bids_count, erc1155_datas_len, erc1155_datas);
+
+        
+        // Save ERC1155 ids for each single ERC1155Data for this (swap_id)
+        _write_storage_bid_erc1155_ids(0, swap_id, bids_count, erc1155_datas_len, erc1155_array_ids); 
+
+        // Save ERC1155 amounts for each single ERC1155Data for this (swap_id)
+        _write_storage_bid_erc1155_amounts(0, swap_id, bids_count, erc1155_datas_len, erc1155_array_amounts);
+
+    }else{
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    
+    }
+
+
+
+    // IF THE FIRST DATA SLOT CONTAINS A ERC20 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_erc20 : ERC20DataInput = [erc20_array];
+    local address_erc20 = data_erc20.asset_contract;
+
+    if (address_erc20 != 0) {
+        assert_erc20_owned(0, erc20_array_len, erc20_array, caller);
+        // Store the amount of ERC20 being "offered" inside this bid for swap_id
+        erc20_assets_per_bid_amount.write(swap_id, bids_count, erc20_array_len);
+        // Save ERC20 data for this (swap_id, bid_id)
+        _write_storage_bid_erc20_data(0, swap_id, bids_count, erc20_array_len, erc20_array);
+
+    }else{
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
+    // TODO : make sure caller owns the erc721
+    
+    // IF THE FIRST DATA SLOT CONTAINS A ERC721 ADDRESS OF 0 IT MEANS NOTHING IS INSIDE IT SO WE IGNORE
+    let data_erc721 : ERC721DataInput = [erc721_array];
+    local address_erc721 = data_erc721.asset_contract;
+
+    if (address_erc721 != 0) {
+        // Store the amount of ERC721 being "offered" inside this bid for swap_id
+        erc721_assets_per_bid_amount.write(swap_id, bids_count, erc721_array_len);
+        // Save ERC721 data for this (swap_id, bid_id)
+        _write_storage_bid_erc721_data(0, swap_id, bids_count, erc721_array_len, erc721_array);
+    }else{
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
+
+    // TODO : make sure caller owns erc721 assets
+
+    // TODO : maybe dangerous IF NOTHING IS PRESENT IN ARRAY DONT RECORD THE SWAP
+    let sum = address_erc20 + address_erc1155 + address_erc721;
+    if (sum == 0){
+        return ();
+    }else {
+        tempvar syscall_ptr = syscall_ptr;
+        tempvar pedersen_ptr = pedersen_ptr;
+        tempvar range_check_ptr = range_check_ptr;
+    }
     local bid : Bid = Bid(bids_count, caller, FALSE);
 
     // Save bid for this swap_id
     bids_per_swap.write(swap_id, bids_count, bid); 
-
-    // Store the amount of ERC1155 being "offered" inside this bid for swap_id
-    erc1155_assets_per_bid_amount.write(swap_id, bids_count, erc1155_datas_len);
-
-    // Save ERC1155 data for this (swap_id, bid_id)
-    _write_storage_bid_erc1155_data(0, swap_id, bids_count, erc1155_datas_len, erc1155_datas);
-
-    
-    // Save ERC1155 ids for each single ERC1155Data for this (swap_id)
-    _write_storage_bid_erc1155_ids(0, swap_id, bids_count, erc1155_datas_len, erc1155_array_ids); 
-
-    // Save ERC1155 amounts for each single ERC1155Data for this (swap_id)
-    _write_storage_bid_erc1155_amounts(0, swap_id, bids_count, erc1155_datas_len, erc1155_array_amounts);
-
-    // Store the amount of ERC721 being "offered" inside this bid for swap_id
-    erc721_assets_per_bid_amount.write(swap_id, bids_count, erc721_array_len);
-    // Save ERC721 data for this (swap_id, bid_id)
-    _write_storage_bid_erc721_data(0, swap_id, bids_count, erc721_array_len, erc721_array);
-
-    // Store the amount of ERC20 being "offered" inside this bid for swap_id
-    erc20_assets_per_bid_amount.write(swap_id, bids_count, erc20_array_len);
-    // Save ERC20 data for this (swap_id, bid_id)
-    _write_storage_bid_erc20_data(0, swap_id, bids_count, erc20_array_len, erc20_array);
-
     // Increment number of bids for this swap_id
     bids_counter_per_swap.write(swap_id, bids_count + 1);
 
@@ -1104,6 +1182,7 @@ func assert_erc20_owned{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_ch
 
     local address = data.asset_contract;
     local amount = data.amount;
+
 
     let (balance : Uint256) = IERC20.balanceOf(contract_address=address, account=caller);
     with_attr error_message("OTC_MODULE : Error Inside Asserting Min Amounts Are Available") {
