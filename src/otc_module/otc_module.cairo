@@ -600,12 +600,10 @@ func execute_swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_pt
     let (amount_of_erc1155_swap) = get_erc1155_per_swap_amount(swap_id);
     _execute_erc1155_v2(0, amount_of_erc1155_swap, owner_of_swap, recipient, swap_id);
 
-    // TODO : check why this line fails
-
 
     //execute the ERC20 swap from BIDDER TO SWAP OWNER
-    let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
-    _execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
+    //let (amount_of_erc20) = get_erc20_bids_per_swap_amount(swap_id, bid_id);
+    //_execute_erc20(0, amount_of_erc20, recipient, owner_of_swap, swap_id, bid_id);
 
     // execute the ERC20 swap from SWAP OWNER TO BIDDER
     //let (amount_of_erc20_swap) = get_erc20_per_swap_amount(swap_id);
@@ -693,7 +691,7 @@ func _execute_erc20{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
         let (res) = uint256_le(amount, balance);
         assert res = 1;
     }
-    
+    // TODO : ONLY BIG ISSUE TO RESOLVE
     //let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from Bidder to SwapOwner Failed"){
         assert res = 1;
@@ -716,6 +714,7 @@ func _execute_erc20_v2{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_che
         let (res) = uint256_le(amount, balance);
         assert res = 1;
     }
+    // TODO : ONLY BIG ISSUE TO RESOLVE
 
     //let (res) = IERC20.transferFrom(address, _from, _to, amount);
     with_attr error_message("OTC_MODULE : execute_swap : ERC20 Transfer from SwapOwner to Bidder Failed"){
